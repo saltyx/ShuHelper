@@ -42,6 +42,11 @@ public class CourseItemAdapter extends RecyclerView.Adapter<CourseItemAdapter.It
         this.data = data;
     }
 
+    public void changeData(ArrayList<Course> data){
+        this.data = data;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemCount() {
         return data.size();

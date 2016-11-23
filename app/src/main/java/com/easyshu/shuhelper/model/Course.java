@@ -86,4 +86,13 @@ public class Course extends BaseObservable implements Parcelable {
         this.param = param;
         notifyPropertyChanged(BR.param);
     }
+
+    @Override
+    public String toString() {
+        return "Course{" +
+                "name='" + name + '\'' +
+                ", year='" + year + '\'' +
+                ", param='" + param + '\'' +
+                '}';
+    }
 }

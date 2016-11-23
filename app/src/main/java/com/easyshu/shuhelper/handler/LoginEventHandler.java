@@ -3,6 +3,8 @@ package com.easyshu.shuhelper.handler;
 import android.content.Context;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
@@ -43,7 +45,7 @@ public class LoginEventHandler {
     final private View root;
     final private LoginParam param;
 
-    private Student student;
+    final private Student student;
 
     public LoginEventHandler(Context mContext,View root ,ProgressDialog dialog,
                              LoginParam param,Student student) {
@@ -60,7 +62,7 @@ public class LoginEventHandler {
                 param.getStudentID(),param.getPassword(),param.getValidateCode());
         Log.d(tag, postData);
         okhttp3.Request request = new Request.Builder()
-                .url("http://cj.shu.edu.cn")
+                .url("http://cj.shu.edu.cn/")
                 .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), postData))
                 .build();
         dialog.show();
@@ -72,22 +74,14 @@ public class LoginEventHandler {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
                     String result = response.body().string();
 
                     Document doc = Jsoup.parse(result);
 
                     Log.d(tag, doc.title());
                     if (!doc.title().contentEquals("登录")){
-                        dialog.dismiss();
-                        Intent intent = new Intent(mContext, MainActivity.class);
-                        Elements e = doc.select("#leftmenu_Accordion > div:nth-child(2) > div:nth-child(2)");
-                        if (e!= null && e.size() > 0){
-                            Log.d(tag, e.get(0).text());
-                            student.setName(FormatUtils.formatName(e.get(0).text()));
-                            intent.putExtra(PreLoginHandler.RETURN_DATA, student);
-                        }
-                        mContext.startActivity(intent);
+                        mHandler.sendEmptyMessage(1);
                     }else{
                         dialog.dismiss();
                         Elements elements = doc.select("#divLoginAlert");
@@ -105,4 +99,46 @@ public class LoginEventHandler {
     public void refreshImage(View view, String url){
         Utils.refreshImage((ImageView) view, url);
     }
+
+    private void findMyName() {
+        Request request = new Request.Builder()
+                .url("http://cj.shu.edu.cn/StudentPortal/GraduateQuery")
+                .build();
+        NetUtils.getInstance().newCall(request, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String data = response.body().string();
+                    dialog.dismiss();
+                    Intent intent = new Intent(mContext, MainActivity.class);
+                    Document doc = Jsoup.parse(data);
+                    Elements elements = doc.select("#leftmenu_Accordion > div:nth-child(2) > div:nth-child(2)");
+                    Log.d(tag, elements.html());
+                    if (elements != null) {
+                        student.setName("你好，"+FormatUtils.formatName(elements.html()));
+                        intent.putExtra(PreLoginHandler.RETURN_DATA, student);
+                    }
+                    mContext.startActivity(intent);
+                }
+            }
+        });
+    }
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+            switch (msg.what) {
+                case 1:
+                    findMyName();
+                    break;
+            }
+
+        }
+    };
 }

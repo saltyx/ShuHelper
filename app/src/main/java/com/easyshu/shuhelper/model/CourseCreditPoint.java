@@ -3,6 +3,8 @@ package com.easyshu.shuhelper.model;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 
+import com.android.databinding.library.baseAdapters.BR;
+
 /**
  * Created by shiyan on 2016/11/23.
  */

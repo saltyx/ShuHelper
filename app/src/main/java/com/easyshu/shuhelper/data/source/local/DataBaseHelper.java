@@ -3,6 +3,7 @@ package com.easyshu.shuhelper.data.source.local;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 /**
  * Created by shiyan on 2016/11/22.
@@ -10,7 +11,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 
-    public static final int DB_VERSION = 1;
+    private String tag = getClass().getName();
+
+    public static final int DB_VERSION = 2;
 
     public static final String DB_NAME = "Info.db";
 
@@ -34,7 +37,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     private static final String SQL_CREATE_STUDENT_ENTRIES =
             "CREATE TABLE " + DataPersistenceContract.StudentEntry.TABLE_NAME + " (" +
-                    DataPersistenceContract.StudentEntry.COLUMN_NAME_NAME + TEXT_TYPE +
+                    DataPersistenceContract.StudentEntry.COLUMN_NAME_NAME + TEXT_TYPE + " PRIMARY KEY" +
                     " )";
 
     private static final String SQL_CREATE_LOGIN_ENTRIES =
@@ -54,6 +57,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                     DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_PARAM + TEXT_TYPE +
                     " )";
 
+    private static final String SQL_VERSION_2_DROP_STUDENT = "DROP TABLE " + DataPersistenceContract.StudentEntry.TABLE_NAME;
+
     public DataBaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -69,6 +74,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        if (i1 == 2){
+            //升级数据库
+            //增加student name为主键
+            sqLiteDatabase.execSQL(SQL_VERSION_2_DROP_STUDENT);
+            sqLiteDatabase.execSQL(SQL_CREATE_STUDENT_ENTRIES);
+        }
+        Log.d(tag, String.valueOf(i) + "#" + String.valueOf(i1));
+    }
 
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        super.onDowngrade(db, oldVersion, newVersion);
     }
 }

@@ -57,7 +57,7 @@ public class LoginParam extends BaseObservable {
 
     public void setStudentID(String studentID) {
         this.studentID = studentID;
-        notifyPropertyChanged(BR.studentCode);
+        notifyPropertyChanged(BR.studentID);
     }
 
     @Bindable

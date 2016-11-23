@@ -1,43 +1,34 @@
 package com.easyshu.shuhelper.ui;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.databinding.library.baseAdapters.BR;
+import com.androidadvance.topsnackbar.TSnackbar;
 import com.easyshu.shuhelper.R;
 import com.easyshu.shuhelper.adapter.CourseItemAdapter;
+import com.easyshu.shuhelper.data.DataSource;
+import com.easyshu.shuhelper.data.source.DataRepo;
 import com.easyshu.shuhelper.databinding.ActivityMainBinding;
 import com.easyshu.shuhelper.handler.PreLoginHandler;
 import com.easyshu.shuhelper.model.Course;
 import com.easyshu.shuhelper.model.Student;
-import com.easyshu.shuhelper.utils.FormatUtils;
-import com.easyshu.shuhelper.utils.NetUtils;
-import com.easyshu.shuhelper.utils.Utils;
+import com.easyshu.shuhelper.utils.Injection;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private String tag = getClass().getName();
     private Student student;
     private ArrayList<Course> courses = new ArrayList<>();
+
+    @NonNull
+    private CourseItemAdapter courseItemAdapter;
+
+    @NonNull
+    private DataRepo mDataRepo;
 
     @BindView(R.id.course) protected RecyclerView mCourse;
 
@@ -66,21 +63,27 @@ public class MainActivity extends AppCompatActivity {
         binding.setVariable(BR.student,student);
         binding.setVariable(BR.login,new PreLoginHandler(this,student));
 
-        NetUtils.getInstance();
         ButterKnife.bind(this);
         mCourse.setLayoutManager(new LinearLayoutManager(this));
-
+        mDataRepo = Injection.provideDataRepo(getApplicationContext());
+        courseItemAdapter = new CourseItemAdapter(getApplicationContext(),courses);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d(tag,"onPause");
+        mDataRepo.saveStudent(student);
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.d(tag,"onResume");
+
+        refreshData();
 
     }
 
@@ -95,41 +98,52 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
+
+
         if (intent.getSerializableExtra(PreLoginHandler.RETURN_DATA) != null){
-            student.setName(((Student)intent.getSerializableExtra(
-                    PreLoginHandler.RETURN_DATA)).getName());
+            Student temp = ((Student)intent.getSerializableExtra(PreLoginHandler.RETURN_DATA));
+            mDataRepo.saveStudent( temp );
         }
-        refreshCourse();
+
+        refreshData();
+
     }
 
-    private void refreshCourse(){
+    private void refreshData(){
 
-        Request request = new Request.Builder()
-                .url("http://cj.shu.edu.cn/StudentPortal/ScoreQuery").build();
-
-        NetUtils.getInstance().newCall(request, new Callback() {
+        mDataRepo.getStudent(null, new DataSource.GetDataCallback<Student>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                mHandler.sendEmptyMessage(-1);
+            public void onDataLoaded(Student data) {
+                student.setName(data.getName());
+                Log.d(tag, data.toString());
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()){
-                    String data = response.body().string();
-
-                    Document doc = Jsoup.parse(data);
-                    Elements elements = doc.select("#AcademicTermID");
-                    if (elements.size() != 0 ){
-                        Element e = elements.get(0);
-                        for (int i= e.children().size() -1;i>=0 ; --i) {
-                            Element x = e.child(i);
-                            Log.d(tag,x.text());
-                            courses.add(FormatUtils.formatCourse(x));
-                        }
-                    }
-                    mHandler.sendEmptyMessage(1);
+            public void onDataNotAvailable(@Nullable String errorMsg) {
+                //不作处理
+                if (errorMsg != null) {
+                    Log.d(tag, errorMsg);
                 }
+            }
+        });
+
+        mDataRepo.getAllCourse(new DataSource.LoadDataCallback<Course>() {
+            @Override
+            public void onDataLoaded(List<Course> data) {
+                courses.clear();
+                courses.addAll(data);
+                for (Course c: courses) {
+                    Log.d(tag, c.toString());
+                }
+                mHandler.sendEmptyMessage(1);
+            }
+
+            @Override
+            public void onDataNotAvailable(@Nullable String errorMsg) {
+                Message message = mHandler.obtainMessage();
+                message.what = -1;
+                message.obj = errorMsg == null ? "未知错误" : errorMsg;
+                mHandler.sendMessage(message);
             }
         });
     }
@@ -138,14 +152,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
-                case -1: //onFails
-                    Snackbar.make(mCourse,"IOException",Snackbar.LENGTH_SHORT).show();
-                    break;
-                case 0:
-                    Snackbar.make(mCourse,"Response Failed",Snackbar.LENGTH_SHORT).show();
+                case -1:
+                    TSnackbar.make(mCourse,(String)msg.obj,TSnackbar.LENGTH_SHORT).show();
                     break;
                 case 1:
-                    mCourse.setAdapter(new CourseItemAdapter(getApplication(),courses));
+                    courseItemAdapter.changeData(courses);
+                    mCourse.setAdapter(courseItemAdapter);
+                    Log.d(tag,"mCourse is SETTED");
                     break;
             }
         }

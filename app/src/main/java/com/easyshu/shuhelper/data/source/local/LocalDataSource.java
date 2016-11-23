@@ -3,7 +3,9 @@ package com.easyshu.shuhelper.data.source.local;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -22,6 +24,8 @@ import java.util.List;
  */
 
 public class LocalDataSource implements DataSource {
+
+    private String tag = getClass().getName();
 
     private static LocalDataSource _DATA_SOURCE_;
 
@@ -227,16 +231,25 @@ public class LocalDataSource implements DataSource {
     public void saveAllCourses(@NonNull List<Course> courses) {
         if (courses != null && !courses.isEmpty()) {
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
-            for (Course c : courses) {
-                ContentValues values = new ContentValues();
-                values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_NAME,c.getName() );
-                values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_YEAR,c.getYear());
-                values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_PARAM,c.getParam());
+            try {
+                db.beginTransaction();
+                for (Course c : courses) {
 
-                db.insert(DataPersistenceContract.CourseEntry.TABLE_NAME,null,values);
+                    ContentValues values = new ContentValues();
+                    values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_NAME, c.getName());
+                    values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_YEAR, c.getYear());
+                    values.put(DataPersistenceContract.CourseEntry.COLUMN_NAME_PARAM, c.getParam());
+
+                    db.insertOrThrow(DataPersistenceContract.CourseEntry.TABLE_NAME, null, values);
+
+                }
+                db.setTransactionSuccessful();
+            } catch (SQLiteConstraintException e) {
+
+            } finally {
+                db.endTransaction();
+                db.close();
             }
-
-            db.close();
         }
     }
 
@@ -244,12 +257,22 @@ public class LocalDataSource implements DataSource {
     public void saveStudent(@NonNull Student student) {
         if (student != null){
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                if (student.getName() != null) {
+                    values.put(DataPersistenceContract.StudentEntry.COLUMN_NAME_NAME, student.getName());
 
-            ContentValues values = new ContentValues();
-            values.put(DataPersistenceContract.StudentEntry.COLUMN_NAME_NAME, student.getName());
-            db.insert(DataPersistenceContract.StudentEntry.TABLE_NAME, null, values);
+                    db.insertOrThrow(DataPersistenceContract.StudentEntry.TABLE_NAME, null, values);
 
-            db.close();
+                    db.setTransactionSuccessful();
+                }
+            } catch (SQLiteConstraintException e) {
+
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
         }
     }
 
@@ -258,19 +281,28 @@ public class LocalDataSource implements DataSource {
         if (details != null && !details.isEmpty()) {
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
 
-            for (CourseDetail detail : details) {
-                ContentValues values = new ContentValues();
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_ID, detail.getId());
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_CREDIT, detail.getCredit());
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_NO, detail.getCourseNo());
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_PARAM, param);
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_POINT, detail.getPoint());
-                values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_TITLE, detail.getTitle());
+            try {
+                db.beginTransaction();
+                for (CourseDetail detail : details) {
 
-                db.insert(DataPersistenceContract.StudentEntry.TABLE_NAME, null, values);
+                    ContentValues values = new ContentValues();
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_ID, detail.getId());
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_CREDIT, detail.getCredit());
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_NO, detail.getCourseNo());
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_PARAM, param);
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_POINT, detail.getPoint());
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_TITLE, detail.getTitle());
+                    db.insertOrThrow(DataPersistenceContract.StudentEntry.TABLE_NAME, null, values);
+
+                }
+                db.setTransactionSuccessful();
+            } catch (SQLiteConstraintException e) {
+
+            } finally {
+                db.endTransaction();
+                db.close();
             }
 
-            db.close();
         }
     }
 
@@ -278,14 +310,20 @@ public class LocalDataSource implements DataSource {
     public void saveLoginParam(@NonNull LoginParam param) {
         if (param != null) {
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put(DataPersistenceContract.LoginEntry.COLUMN_NAME_STUDENT_ID,param.getStudentID());
+                values.put(DataPersistenceContract.LoginEntry.COLUMN_NAME_PASSWORD,param.getPassword());
 
-            ContentValues values = new ContentValues();
-            values.put(DataPersistenceContract.LoginEntry.COLUMN_NAME_STUDENT_ID,param.getStudentID());
-            values.put(DataPersistenceContract.LoginEntry.COLUMN_NAME_PASSWORD,param.getPassword());
+                db.insertOrThrow(DataPersistenceContract.LoginEntry.TABLE_NAME,null,values);
+                db.setTransactionSuccessful();
+            }catch (SQLiteConstraintException e) {
 
-            db.insert(DataPersistenceContract.LoginEntry.TABLE_NAME,null,values);
-
-            db.close();
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
         }
     }
 
@@ -293,15 +331,22 @@ public class LocalDataSource implements DataSource {
     public void saveCourseCreditAndPoint(@NonNull CourseCreditPoint param) {
         if (param != null) {
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_CREDIT, param.getCredit());
+                values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM, param.getParam());
+                values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_POINT, param.getPoint());
 
-            ContentValues values = new ContentValues();
-            values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_CREDIT,param.getCredit());
-            values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM, param.getParam());
-            values.put(DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_POINT, param.getPoint());
+                db.insertOrThrow(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME, null, values);
+                db.setTransactionSuccessful();
+            } catch (SQLiteConstraintException e) {
 
-            db.insert(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME,null,values);
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
 
-            db.close();
         }
     }
 
