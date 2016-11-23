@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View"></import>
+        <variable
+            name="student"
+            type="com.easyshu.shuhelper.model.Student"></variable>
+        <variable
+            name="login"
+            type="com.easyshu.shuhelper.handler.PreLoginHandler"></variable>
+    </data>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/activity_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/main_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:fitsSystemWindows="true">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true"
+                app:contentScrim="@color/colorPrimaryLight"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:expandedTitleMarginStart="48dp"
+                app:expandedTitleMarginEnd="64dp"
+                app:title="@{student.name ?? @string/login_tip}">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:fitsSystemWindows="true"
+                    app:layout_collapseMode="parallax"
+                    app:newImage="@{student.newImageUrl}"/>
+
+                <android.support.v7.widget.Toolbar
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_scrollFlags="scroll|enterAlwaysCollapsed|enterAlways">
+                </android.support.v7.widget.Toolbar>
+
+            </android.support.design.widget.CollapsingToolbarLayout>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/course"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="@{student.name == null ? View.GONE : View.VISIBLE}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        </android.support.v7.widget.RecyclerView>
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/activity_vertical_margin"
+            android:src="@mipmap/ic_account_circle_white_48dp"
+            android:onClick="@{() -> login.onPreLoginClick()}"
+            app:layout_anchor="@id/main_app_bar"
+            app:layout_anchorGravity="right|bottom|end"/>
+
+        <LinearLayout
+            android:visibility="@{student.name != null ? View.GONE : View.VISIBLE}"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:orientation="vertical"
+            app:layout_anchor="@id/course"
+            app:layout_anchorGravity="center_vertical|center_horizontal">
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@mipmap/ic_pets_black_48dp"
+                android:onClick="@{() -> login.onPreLoginClick()}"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="点击登录"
+                android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+
+
+
+    </android.support.design.widget.CoordinatorLayout>
+
+</layout>

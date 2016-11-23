@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ShuHelper</string>
+
+    <string name="login_tip">需要登陆</string>
+</resources>

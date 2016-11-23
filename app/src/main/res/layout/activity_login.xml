@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="param"
+            type="com.easyshu.shuhelper.model.LoginParam"></variable>
+
+        <variable
+            name="event"
+            type="com.easyshu.shuhelper.handler.LoginParamWatcher"></variable>
+        
+        <variable
+            name="login"
+            type="com.easyshu.shuhelper.handler.LoginEventHandler"></variable>
+    </data>
+
+    <LinearLayout
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/activity_login"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context="com.easyshu.shuhelper.ui.LoginActivity">
+
+        <android.support.v7.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimaryLight">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/ic_account_circle_white_48dp"
+                android:foregroundGravity="center_horizontal"/>
+        </android.support.v7.widget.Toolbar>
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/main_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="30dp"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:layout_gravity="center_vertical"
+                >
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <EditText
+                        android:addTextChangedListener="@{event.studentCodeWatcher}"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="学号"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1"
+                        android:text="@{param.studentID}"/>
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <EditText
+                        android:addTextChangedListener="@{event.passwordWatcher}"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:maxLines="1"
+                        android:hint="密码"
+                        android:text="@{param.password}"/>
+                </android.support.design.widget.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+
+                        <EditText
+                            android:id="@+id/validate"
+                            android:addTextChangedListener="@{event.validateWatcher}"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="验证码"
+                            android:text="@{param.validateCode}"
+                            android:imeOptions="actionUnspecified"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            />
+
+                    </android.support.design.widget.TextInputLayout>
+                    <ImageView
+                        android:id="@+id/validateCode"
+                        android:layout_weight="3"
+                        android:layout_width="match_parent"
+                        android:layout_height="50sp"
+                        android:onClick="@{(view) -> login.refreshImage(view,param.imageUrl)}"
+                        app:image="@{param.imageUrl}"
+                        />
+                </LinearLayout>
+
+                <android.support.v7.widget.ButtonBarLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.AppCompat.Button.Colored"
+                        android:text="登录"
+                        android:onClick="@{() -> login.onLoginClick()}"/>
+                </android.support.v7.widget.ButtonBarLayout>
+
+            </LinearLayout>
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+
+
+
+    </LinearLayout>
+
+</layout>
