@@ -61,4 +61,14 @@ public class Student extends BaseObservable implements
                 "name='" + name + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Student) {
+            if (((Student) obj).getName() == this.name) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

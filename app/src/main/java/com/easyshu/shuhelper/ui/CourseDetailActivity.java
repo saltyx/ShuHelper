@@ -12,12 +12,16 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Pair;
 
+import com.android.annotations.Nullable;
 import com.androidadvance.topsnackbar.TSnackbar;
 import com.easyshu.shuhelper.R;
 import com.easyshu.shuhelper.adapter.CourseDetailAdapter;
+import com.easyshu.shuhelper.data.DataSource;
+import com.easyshu.shuhelper.data.source.DataRepo;
 import com.easyshu.shuhelper.databinding.ActivityCourseDetailBinding;
 import com.easyshu.shuhelper.handler.CourseItemHandler;
 import com.easyshu.shuhelper.model.Course;
+import com.easyshu.shuhelper.model.CourseCreditPoint;
 import com.easyshu.shuhelper.model.CourseDetail;
 import com.easyshu.shuhelper.model.LoginParam;
 import com.easyshu.shuhelper.utils.FormatUtils;
@@ -30,6 +34,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,12 +47,14 @@ import okhttp3.Response;
 
 public class CourseDetailActivity extends AppCompatActivity {
 
-    private String tag = getClass().getName();
-
     private Course course;
 
-    private ObservableField<String> credit = new ObservableField<>()
-            , point = new ObservableField<>();
+    private DataRepo mDataPepo;
+
+    private CourseDetailAdapter adapter;
+
+    private CourseCreditPoint totalInfo = new CourseCreditPoint();
+
     private ArrayList<CourseDetail> courseInfo = new ArrayList<>();
 
     @BindView(R.id.main_content) protected RecyclerView mainContent;
@@ -55,90 +62,84 @@ public class CourseDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         ActivityCourseDetailBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_course_detail);
+
         ButterKnife.bind(this);
+
         course = getIntent().getParcelableExtra(CourseItemHandler.COURSE_PARAM);
+        totalInfo.setParam(course.getParam());
         binding.setCourse(course);
-        binding.setCredit(credit);
-        binding.setPoint(point);
-        refreshData(course.getParam());
+        binding.setTotalInfo(totalInfo);
+
         mainContent.setLayoutManager(new LinearLayoutManager(this));
+        mDataPepo = DataRepo.getInstance(getApplicationContext());
+        adapter = new CourseDetailAdapter(courseInfo);
+        mainContent.setAdapter(adapter);
+
+        refreshData(course.getParam());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDataPepo.saveCourseCreditAndPoint(totalInfo);
+        mDataPepo.saveCourseDetail(totalInfo.getParam(), courseInfo);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
     }
 
-    public void refreshData(final String param){
-        String postData = String.format("academicTermID=%s", param);
-
-        Request request = new Request.Builder()
-                .url("http://cj.shu.edu.cn/StudentPortal/CtrlScoreQuery")
-                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), postData))
-                .build();
-        NetUtils.getInstance().newCall(request, new Callback() {
+    public void refreshData(final String param) {
+        mDataPepo.getCourseDetailByParam(param, new DataSource.LoadDataCallback<CourseDetail>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                mHandler.sendEmptyMessage(-1);
+            public void onDataLoaded(List<CourseDetail> data) {
+                courseInfo.clear();
+                courseInfo.addAll(data);
+                mHandler.sendEmptyMessage(1);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()){
-                    String data = response.body().string();
+            public void onDataNotAvailable(@Nullable String errorMsg) {
+                Message msg = Message.obtain();
+                msg.obj = errorMsg;
+                msg.what = -1;
+                mHandler.sendMessage(msg);
+            }
+        });
 
-                    Document doc = Jsoup.parse(data);
+        mDataPepo.getCourseCreditAndPoint(param, new DataSource.GetDataCallback<CourseCreditPoint>() {
+            @Override
+            public void onDataLoaded(CourseCreditPoint data) {
+                totalInfo.setPoint(data.getPoint());
+                totalInfo.setCredit(data.getCredit());
+                totalInfo.setParam(data.getParam());
+            }
 
-                    if (doc.title().contains("登录")){
-                        mHandler.sendEmptyMessage(-3);
-                        return;
-                    }
-
-                    if (doc.body().text().contains("成绩未发布")){
-                        mHandler.sendEmptyMessage(-2);
-                        return;
-                    }
-
-                    Elements elements = doc.select("td:not(.right)");
-                    Element e = doc.select("td.right").get(0);
-                    Log.d(tag, e.html());
-                    Pair<String,String> temp = FormatUtils.formatTotalScore(e);
-                    if (temp != null){
-                        credit.set(temp.first);
-                        point.set(temp.second);
-                        Log.d(tag,temp.first + "#" + temp.second);
-                    }
-                    for(int i=0; i<elements.size(); i+= 6){
-                        courseInfo.add(new CourseDetail(elements.get(i).text(),elements.get(i+1).text(),
-                                elements.get(i+2).text(),elements.get(i+3).text(),elements.get(i+4).text(),
-                                elements.get(i+5).text()));
-                    }
-
-                    mHandler.sendEmptyMessage(1);
-
-                }else {
-                    mHandler.sendEmptyMessage(0);
-                }
+            @Override
+            public void onDataNotAvailable(@Nullable String errorMsg) {
+                Message msg = Message.obtain();
+                msg.obj = errorMsg == null ? "未知错误" : errorMsg;
+                msg.what = -1;
+                mHandler.sendMessage(msg);
             }
         });
     }
 
-    private Handler mHandler = new Handler(){
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case -1:
-                    TSnackbar.make(mainContent,"IOException",TSnackbar.LENGTH_SHORT).show();
-                    break;
-                case 0:
-                    TSnackbar.make(mainContent,"Response Failed", TSnackbar.LENGTH_SHORT).show();
+                    TSnackbar.make(mainContent,(String)msg.obj,TSnackbar.LENGTH_LONG).show();
                     break;
                 case 1:
-                    mainContent.setAdapter(new CourseDetailAdapter(courseInfo));
+                    adapter.changeData(courseInfo);
                     break;
-                case -2:
-                    TSnackbar.make(mainContent,"本学期成绩未发布！",TSnackbar.LENGTH_SHORT).show();
-                    break;
-                case -3:
-                    TSnackbar.make(mainContent,"Cookie已经失效，需要重新登录",TSnackbar.LENGTH_LONG).show();
-            }
+                }
         }
     };
 }

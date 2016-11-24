@@ -59,7 +59,7 @@ public interface DataSource {
 
     void saveCourseCreditAndPoint(@NonNull CourseCreditPoint param);
 
-    void deleteCourseCreditAndPoint();
+    void deleteCourseCreditAndPoint(@NonNull String param);
 
     void deleteStudent();
 
@@ -67,5 +67,5 @@ public interface DataSource {
 
     void deleteLoginParam();
 
-    void deleteCourseDetail();
+    void deleteCourseDetail(@NonNull String param);
 }

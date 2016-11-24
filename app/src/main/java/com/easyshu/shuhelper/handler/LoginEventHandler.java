@@ -107,7 +107,7 @@ public class LoginEventHandler {
         NetUtils.getInstance().newCall(request, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
+                mHandler.sendEmptyMessage(-1);
             }
 
             @Override
@@ -124,6 +124,8 @@ public class LoginEventHandler {
                         intent.putExtra(PreLoginHandler.RETURN_DATA, student);
                     }
                     mContext.startActivity(intent);
+                } else {
+                    mHandler.sendEmptyMessage(-2);
                 }
             }
         });
@@ -136,6 +138,14 @@ public class LoginEventHandler {
             switch (msg.what) {
                 case 1:
                     findMyName();
+                    break;
+                case -1:
+                    dialog.dismiss();
+                    TSnackbar.make(root, "IOException",TSnackbar.LENGTH_LONG).show();
+                    break;
+                case -2:
+                    dialog.dismiss();
+                    TSnackbar.make(root, "Response failed", TSnackbar.LENGTH_LONG).show();
                     break;
             }
 

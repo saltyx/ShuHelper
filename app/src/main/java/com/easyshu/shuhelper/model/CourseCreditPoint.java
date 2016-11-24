@@ -15,6 +15,9 @@ public class CourseCreditPoint extends BaseObservable {
     private String credit;
     private String point;
 
+    public CourseCreditPoint() {
+    }
+
     public CourseCreditPoint(String credit, String param, String point) {
         this.credit = credit;
         this.param = param;
@@ -49,5 +52,20 @@ public class CourseCreditPoint extends BaseObservable {
     public void setPoint(String point) {
         this.point = point;
         notifyPropertyChanged(BR.point);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof CourseCreditPoint) {
+            if (((CourseCreditPoint) obj).getParam() != this.param
+                    || ((CourseCreditPoint) obj).getCredit() != this.credit
+                    || ((CourseCreditPoint) obj).getPoint()  != this.point) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

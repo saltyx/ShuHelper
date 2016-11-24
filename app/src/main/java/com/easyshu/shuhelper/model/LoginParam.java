@@ -69,4 +69,18 @@ public class LoginParam extends BaseObservable {
         this.validateCode = validateCode;
         notifyPropertyChanged(BR.validateCode);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof LoginParam) {
+            if (((LoginParam) obj).getStudentID() != this.studentID
+                    || ((LoginParam) obj).getPassword() != this.password) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

@@ -13,6 +13,7 @@ import com.easyshu.shuhelper.model.CourseDetail;
 import com.easyshu.shuhelper.model.LoginParam;
 import com.easyshu.shuhelper.model.Student;
 
+import java.net.FileNameMap;
 import java.util.List;
 
 /**
@@ -185,28 +186,105 @@ public class DataRepo implements DataSource {
 
     /*save操作只在本地*/
     @Override
-    public void saveAllCourses(List<Course> courses) {
-        mLocalDataSource.saveAllCourses(courses);
+    public void saveAllCourses(final List<Course> courses) {
+        if (courses != null && courses.size() > 0) {
+            getAllCourse(new LoadDataCallback<Course>() {
+                @Override
+                public void onDataLoaded(List<Course> data) {
+                    if (data.size() < courses.size()) {
+                        mLocalDataSource.deleteAllCourses();
+                        mLocalDataSource.saveAllCourses(courses);
+                    }
+                }
+
+                @Override
+                public void onDataNotAvailable(@Nullable String errorMsg) {
+                    mLocalDataSource.saveAllCourses(courses);
+                }
+            });
+
+        }
     }
 
     @Override
-    public void saveStudent(@NonNull Student student) {
-        mLocalDataSource.saveStudent(student);
+    public void saveStudent(@NonNull final Student student) {
+        if (student != null && student.getName() != null) {
+            mLocalDataSource.getStudent(null, new GetDataCallback<Student>() {
+                @Override
+                public void onDataLoaded(Student data) {
+                    if (!data.equals(student)) {
+                        mLocalDataSource.deleteStudent();
+                        mLocalDataSource.saveStudent(student);
+                    }
+                }
+
+                @Override
+                public void onDataNotAvailable(@Nullable String errorMsg) {
+                    mLocalDataSource.saveStudent(student);
+                }
+            });
+
+        }
     }
 
     @Override
-    public void saveCourseDetail(@NonNull String param, @NonNull List<CourseDetail> detail) {
-        mLocalDataSource.saveCourseDetail(param, detail);
+    public void saveCourseDetail(@NonNull final String param, @NonNull final List<CourseDetail> detail) {
+        if (param != null && detail != null && detail.size() > 0) {
+            mLocalDataSource.getCourseDetailByParam(param, new LoadDataCallback<CourseDetail>() {
+                @Override
+                public void onDataLoaded(List<CourseDetail> data) {
+                    if (data.size() < detail.size()) {
+                        mLocalDataSource.deleteCourseDetail(param);
+                        mLocalDataSource.saveCourseDetail(param, detail);
+                    }
+                }
+
+                @Override
+                public void onDataNotAvailable(@Nullable String errorMsg) {
+                    mLocalDataSource.saveCourseDetail(param ,detail);
+                }
+            });
+        }
     }
 
     @Override
-    public void saveLoginParam(LoginParam param) {
-        mLocalDataSource.saveLoginParam(param);
+    public void saveLoginParam(final LoginParam param) {
+        if (param != null && param.getStudentID() != null) {
+            mLocalDataSource.getLoginParam(new GetDataCallback<LoginParam>() {
+                @Override
+                public void onDataLoaded(LoginParam data) {
+                    if (!data.equals(param)) {
+                        mLocalDataSource.deleteLoginParam();
+                        mLocalDataSource.saveLoginParam(param);
+                    }
+                }
+
+                @Override
+                public void onDataNotAvailable(@Nullable String errorMsg) {
+                    mLocalDataSource.saveLoginParam(param);
+                }
+            });
+        }
     }
 
     @Override
-    public void saveCourseCreditAndPoint(@NonNull CourseCreditPoint param) {
+    public void saveCourseCreditAndPoint(@NonNull final CourseCreditPoint param) {
+        if (param != null && param.getParam() != null ) {
 
+            mLocalDataSource.getCourseCreditAndPoint(param.getParam(), new GetDataCallback<CourseCreditPoint>() {
+                @Override
+                public void onDataLoaded(CourseCreditPoint data) {
+                    if (!data.equals(param)) {
+                        mLocalDataSource.saveCourseCreditAndPoint(param);
+                    }
+                }
+
+                @Override
+                public void onDataNotAvailable(@Nullable String errorMsg) {
+                    mLocalDataSource.saveCourseCreditAndPoint(param);
+                }
+            });
+        }
     }
 
     /*delete操作只在本地*/
@@ -226,12 +304,12 @@ public class DataRepo implements DataSource {
     }
 
     @Override
-    public void deleteCourseDetail() {
-        mLocalDataSource.deleteCourseDetail();
+    public void deleteCourseDetail(@NonNull String param) {
+        mLocalDataSource.deleteCourseDetail(param);
     }
 
     @Override
-    public void deleteCourseCreditAndPoint() {
+    public void deleteCourseCreditAndPoint(@NonNull String param) {
 
     }
 }

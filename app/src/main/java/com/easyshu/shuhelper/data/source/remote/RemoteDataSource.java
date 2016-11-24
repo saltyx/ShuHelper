@@ -142,7 +142,7 @@ public class RemoteDataSource implements DataSource {
 
                     for(int i=0; i<elements.size(); i+= 6){
                         details.add(new CourseDetail(elements.get(i).text(),elements.get(i+1).text(),
-                                elements.get(i+2).text(),elements.get(i+3).text(),elements.get(i+4).text(),
+                                elements.get(i+2).text().replace(" ",""),elements.get(i+3).text(),elements.get(i+4).text(),
                                 elements.get(i+5).text()));
                     }
                     callback.onDataLoaded(details);
@@ -273,7 +273,7 @@ public class RemoteDataSource implements DataSource {
     }
 
     @Override
-    public void deleteCourseCreditAndPoint() {
+    public void deleteCourseCreditAndPoint(@NonNull String param) {
 
     }
 
@@ -288,7 +288,7 @@ public class RemoteDataSource implements DataSource {
     }
 
     @Override
-    public void deleteCourseDetail() {
+    public void deleteCourseDetail(@NonNull String param) {
 
     }
 

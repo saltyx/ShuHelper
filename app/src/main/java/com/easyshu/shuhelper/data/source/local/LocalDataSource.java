@@ -25,8 +25,6 @@ import java.util.List;
 
 public class LocalDataSource implements DataSource {
 
-    private String tag = getClass().getName();
-
     private static LocalDataSource _DATA_SOURCE_;
 
     private DataBaseHelper mDataBaseHelper;
@@ -136,10 +134,16 @@ public class LocalDataSource implements DataSource {
         CourseCreditPoint data = null;
 
         String [] projection = {
-                DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM
+                DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM,
+                DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_CREDIT,
+                DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_POINT
         };
 
-        Cursor c = db.query(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME, projection, null,null,null,null,null);
+        String selection = DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM + " LIKE ? ";
+        String[] selectArgvs = {param};
+
+        Cursor c = db.query(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME, projection,
+                selection,selectArgvs,null,null,null);
 
         if ( c!= null && c.getCount() > 0) {
             c.moveToFirst();
@@ -233,6 +237,7 @@ public class LocalDataSource implements DataSource {
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
             try {
                 db.beginTransaction();
+
                 for (Course c : courses) {
 
                     ContentValues values = new ContentValues();
@@ -256,6 +261,7 @@ public class LocalDataSource implements DataSource {
     @Override
     public void saveStudent(@NonNull Student student) {
         if (student != null){
+
             SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
             db.beginTransaction();
             try {
@@ -290,9 +296,10 @@ public class LocalDataSource implements DataSource {
                     values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_CREDIT, detail.getCredit());
                     values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_NO, detail.getCourseNo());
                     values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_PARAM, param);
+                    values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_SCORE,detail.getScore());
                     values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_POINT, detail.getPoint());
                     values.put(DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_TITLE, detail.getTitle());
-                    db.insertOrThrow(DataPersistenceContract.StudentEntry.TABLE_NAME, null, values);
+                    db.insertOrThrow(DataPersistenceContract.CourseDetailEntry.TABLE_NAME, null, values);
 
                 }
                 db.setTransactionSuccessful();
@@ -352,12 +359,19 @@ public class LocalDataSource implements DataSource {
 
     // 清空表
     @Override
-    public void deleteCourseCreditAndPoint() {
-        SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+    public void deleteCourseCreditAndPoint(@NonNull String param) {
 
-        db.delete(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME,null,null);
+        if (param != null && !param.contentEquals("")) {
 
-        db.close();
+            SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+
+            String[] whereArgv = {param};
+            String where = DataPersistenceContract.CourseCreditPointEntry.COLUMN_NAME_PARAM + " = ? ";
+
+            db.delete(DataPersistenceContract.CourseCreditPointEntry.TABLE_NAME, where, whereArgv);
+
+            db.close();
+        }
     }
 
     @Override
@@ -388,12 +402,17 @@ public class LocalDataSource implements DataSource {
     }
 
     @Override
-    public void deleteCourseDetail() {
-        SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+    public void deleteCourseDetail(@NonNull String param) {
+        if (param!= null && !param.contentEquals("") ) {
+            SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
 
-        db.delete(DataPersistenceContract.CourseDetailEntry.TABLE_NAME,null,null);
+            String[] whereArgv = {param};
+            String where = DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_PARAM + " =? ";
 
-        db.close();
+            db.delete(DataPersistenceContract.CourseDetailEntry.TABLE_NAME, where, whereArgv);
+
+            db.close();
+        }
     }
 }
 

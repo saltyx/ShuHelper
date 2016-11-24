@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
     final private static String COURSE_TAG = "COURSE_TAG";
     final private static String STUDENT_TAG = "STUDENT_TAG";
 
-    private String tag = getClass().getName();
     private Student student;
     private ArrayList<Course> courses = new ArrayList<>();
 
@@ -67,12 +66,12 @@ public class MainActivity extends AppCompatActivity {
         mCourse.setLayoutManager(new LinearLayoutManager(this));
         mDataRepo = Injection.provideDataRepo(getApplicationContext());
         courseItemAdapter = new CourseItemAdapter(getApplicationContext(),courses);
+        mCourse.setAdapter(courseItemAdapter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(tag,"onPause");
         mDataRepo.saveStudent(student);
 
     }
@@ -80,8 +79,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        Log.d(tag,"onResume");
 
         refreshData();
 
@@ -115,14 +112,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataLoaded(Student data) {
                 student.setName(data.getName());
-                Log.d(tag, data.toString());
             }
 
             @Override
             public void onDataNotAvailable(@Nullable String errorMsg) {
                 //不作处理
                 if (errorMsg != null) {
-                    Log.d(tag, errorMsg);
+
                 }
             }
         });
@@ -132,9 +128,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataLoaded(List<Course> data) {
                 courses.clear();
                 courses.addAll(data);
-                for (Course c: courses) {
-                    Log.d(tag, c.toString());
-                }
+
                 mHandler.sendEmptyMessage(1);
             }
 
@@ -157,8 +151,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 1:
                     courseItemAdapter.changeData(courses);
-                    mCourse.setAdapter(courseItemAdapter);
-                    Log.d(tag,"mCourse is SETTED");
                     break;
             }
         }

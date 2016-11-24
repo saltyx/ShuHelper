@@ -11,8 +11,6 @@ import android.util.Log;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 
-    private String tag = getClass().getName();
-
     public static final int DB_VERSION = 2;
 
     public static final String DB_NAME = "Info.db";
@@ -48,7 +46,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     private static final String SQL_CREATE_COURSE_DETAIL_ENTRIES =
             "CREATE TABLE " + DataPersistenceContract.CourseDetailEntry.TABLE_NAME + " (" +
-                    DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_NO + TEXT_TYPE + " PRIMARY KEY," +
+                    DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_NO + TEXT_TYPE + COMMA_SEP +
                     DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_ID + TEXT_TYPE + COMMA_SEP +
                     DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
                     DataPersistenceContract.CourseDetailEntry.COLUMN_NAME_CREDIT + TEXT_TYPE + COMMA_SEP +
@@ -80,7 +78,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             sqLiteDatabase.execSQL(SQL_VERSION_2_DROP_STUDENT);
             sqLiteDatabase.execSQL(SQL_CREATE_STUDENT_ENTRIES);
         }
-        Log.d(tag, String.valueOf(i) + "#" + String.valueOf(i1));
     }
 
     @Override

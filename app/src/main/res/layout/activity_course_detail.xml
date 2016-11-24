@@ -7,14 +7,11 @@
         <variable
             name="course"
             type="com.easyshu.shuhelper.model.Course"></variable>
-        
+
         <variable
-            name="credit"
-            type="ObservableField&lt;String&gt;"></variable>
-        
-        <variable
-            name="point"
-            type="ObservableField&lt;String&gt;"></variable>
+            name="totalInfo"
+            type="com.easyshu.shuhelper.model.CourseCreditPoint"></variable>
+
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -82,7 +79,7 @@
                                 android:textSize="30dp"
                                 android:textAlignment="center"
                                 android:gravity="center_vertical"
-                                android:text="@{credit.get()}"/>
+                                android:text="@{totalInfo.credit}"/>
                         </LinearLayout>
                         <ImageView
                             android:layout_width="1dp"
@@ -111,7 +108,7 @@
                                 android:textSize="30dp"
                                 android:gravity="center_vertical"
                                 android:textAlignment="center"
-                                android:text="@{point.get()}"/>
+                                android:text="@{totalInfo.point}"/>
                         </LinearLayout>
                     </LinearLayout>
 
